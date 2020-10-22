@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Project</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+    $(document).ready(function(){
+
+        var scrabble_input_test = new RegExp('^[A-Za-z](-([1-9]|[1][0-5])){2}$'); //regex should be repeated server side
+        var scrabble_input;
+        var new_letter;
+        var new_row;
+        var new_col;
+        // Get value from button click
+        $("#myBtn").click(function(){
+            var user_input = $("#myInput").val();
+            if(scrabble_input_test.test(user_input)){
+                alert("Valid Input");
+                scrabble_input = user_input.split('-'); //Get individual components of scrabble move (<letter>-<row>-<col>)
+                alert(scrabble_input);
+                new_letter = scrabble_input[0];
+                new_row = scrabble_input[1]-1; //subtract one bc zero indexed
+                new_col = scrabble_input[2]-1;
+
+               //get elements of board
+                var board = document.getElementById("Board"), 
+                    rows = board.getElementsByTagName('tr'),
+                    i, j, cells, value;
+
+                cols = rows[new_row].getElementsByTagName('td');
+                
+                cell = cols[new_col];
+                cell_val = cell.innerHTML;
+                alert(cell_val);
+
+                cell.innerHTML = new_letter; //put input letter into board
+
+
+//.html('<input name="edit_name" value="'+name+'">');
+            } else {
+                alert("Invalid Input")}
+        });
+    });
+    </script>
+  <style>
+  table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  vertical-align: middle;
+  contenteditable: true;
+  }
+  </style>
+  </head>
+  <body>
+    <h1>Header</h1>
+       <table>
+         <table id="Board">
+         <tr>
+           <td>T</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>T</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>d</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>T</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>X</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>d</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>.</td>
+	   <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>t</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>D</td>
+           <td>.</td>
+         </tr>
+         <tr>
+           <td>T</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>d</td>
+           <td>.</td>
+           <td>.</td>
+           <td>T</td>
+         </tr>
+       </table>
+
+    <input type="text" id="myInput">
+    <button type="button" id="myBtn">Show Value</button>
+  </body>
+</html>
+
