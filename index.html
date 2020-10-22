@@ -5,6 +5,13 @@
     <title>Project</title>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
+
+    //letters and points should be defined on server side for checks
+    var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+    var points = [1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 4, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10] //Only needed on client for displaying points of word placed on board pre-submit
+    var points_map = Object.assign.apply({}, letters.map((v,i) => ( {[v]: points[i]}) ) );
+    var input_points = []
+
     $(document).ready(function(){
 
         var scrabble_input_test = new RegExp('^[A-Za-z](-([1-9]|[1][0-5])){2}$'); //regex should be repeated server side
@@ -12,37 +19,67 @@
         var new_letter;
         var new_row;
         var new_col;
+        var word_multiplier = 1;
+        var letter_multiplier = 1;
+        var predicted_score = 0; //Only for display, actually calculated on server
+
+        //validate input position function
+          //inputs: row/col of all input letters
+          //check: 4 surrounding points of any input letter need to have a valid pre-placed letter
+          //output: true/false
+
+       //Submit button function
+         //inputs: all row/col pairs of input points
+         //Checks validate input position function 
+         //Sends inputs to server
+         //Waits for server response (timeout 10s)
+           //If server says valid move:
+             //updates local score display with server response
+           //else: restart turn
+
         // Get value from button click
         $("#myBtn").click(function(){
             var user_input = $("#myInput").val();
             if(scrabble_input_test.test(user_input)){
-                alert("Valid Input");
                 scrabble_input = user_input.split('-'); //Get individual components of scrabble move (<letter>-<row>-<col>)
-                alert(scrabble_input);
-                new_letter = scrabble_input[0];
+                //alert(scrabble_input);
+                new_letter = scrabble_input[0].toUpperCase();
                 new_row = scrabble_input[1]-1; //subtract one bc zero indexed
                 new_col = scrabble_input[2]-1;
 
                //get elements of board
                 var board = document.getElementById("Board"), 
                     rows = board.getElementsByTagName('tr'),
-                    i, j, cells, value;
+                    i, j, cell, value;
 
-                cols = rows[new_row].getElementsByTagName('td');
+                var cols = rows[new_row].getElementsByTagName('td');
                 
                 cell = cols[new_col];
-                cell_val = cell.innerHTML;
-                alert(cell_val);
+                var cell_val = cell.innerHTML;
+                //alert(cell_val);
 
-                cell.innerHTML = new_letter; //put input letter into board
+                //Repeat following score multiplier checks on server
+                if(cell_val=='3W'){word_multiplier = 3;}
+                if(cell_val=='2W'){word_multiplier = 2;}
+                if(cell_val=='3L'){letter_multiplier = 3;}
+                if(cell_val=='2L'){letter_multiplier = 2;}
 
 
-//.html('<input name="edit_name" value="'+name+'">');
+                if(!letters.includes(cell_val)){
+                    cell.innerHTML = new_letter; //put input letter into board. Only for show, real thing done on server
+                    var move_points = parseInt(document.getElementById("move_points").innerHTML);
+                    move_points = parseInt(points_map[new_letter]);
+                    document.getElementById("move_points").innerHTML = move_points
+                }
+                else{ alert("Invalid Move")} //Don't tell user how its invalid
+
+
             } else {
                 alert("Invalid Input")}
         });
     });
     </script>
+
   <style>
   table, th, td {
   border: 1px solid black;
@@ -56,150 +93,146 @@
   </style>
   </head>
   <body>
-    <h1>Header</h1>
+    <h1>Scrabble</h1>
+      <label>User1: </label>
+      <label id="user_score">0</label>
+      <br/>
+      <label>User2: </label>
+      <label id="enemy_score">0</label>
+
        <table>
          <table id="Board">
          <tr>
-           <td>T</td>
+           <td>3W</td>
 	   <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>T</td>
+           <td>3W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
-           <td>T</td>
+           <td>3W</td>
          </tr>
+
          <tr>
            <td>.</td>
-	   <td>D</td>
+	   <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
          </tr>
-         <tr>
-           <td>T</td>
-	   <td>.</td>
-           <td>.</td>
-           <td>d</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>T</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>d</td>
-           <td>.</td>
-           <td>.</td>
-           <td>T</td>
-         </tr>
+
          <tr>
            <td>.</td>
 	   <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
          </tr>
+
          <tr>
-           <td>d</td>
+           <td>2L</td>
 	   <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
          </tr>
+
          <tr>
            <td>.</td>
 	   <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
          </tr>
+
          <tr>
            <td>.</td>
-	   <td>t</td>
+	   <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
          </tr>
+
          <tr>
            <td>.</td>
 	   <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
          </tr>
+
          <tr>
-           <td>T</td>
-	   <td>.</td>
+	   <td>3W</td>
            <td>.</td>
-           <td>d</td>
+           <td>.</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
@@ -207,134 +240,146 @@
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
-           <td>T</td>
+           <td>3W</td>
          </tr>
+
          <tr>
            <td>.</td>
 	   <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
          </tr>
+
          <tr>
            <td>.</td>
-	   <td>t</td>
+	   <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
+           <td>3L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
-           <td>.</td>
-         </tr>
-         <tr>
-           <td>.</td>
-	   <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>D</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>D</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td>3L</td>
            <td>.</td>
          </tr>
-         <tr>
-           <td>d</td>
-	   <td>.</td>
-           <td>.</td>
-           <td>D</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>d</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>D</td>
-           <td>.</td>
-           <td>.</td>
-           <td>d</td>
-         </tr>
+
          <tr>
            <td>.</td>
 	   <td>.</td>
-           <td>D</td>
+           <td>.</td>
+           <td>.</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
-           <td>.</td>
-           <td>d</td>
            <td>.</td>
            <td>.</td>
-           <td>.</td>
-           <td>D</td>
-           <td>.</td>
-           <td>.</td>
-         </tr>
-         <tr>
-           <td>.</td>
-	   <td>D</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>t</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>t</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>D</td>
            <td>.</td>
          </tr>
+
          <tr>
-           <td>T</td>
+           <td>2L</td>
 	   <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>T</td>
+           <td>2L</td>
            <td>.</td>
            <td>.</td>
            <td>.</td>
-           <td>d</td>
+           <td>2W</td>
            <td>.</td>
            <td>.</td>
-           <td>T</td>
+           <td>2L</td>
          </tr>
+
+         <tr>
+           <td>.</td>
+	   <td>.</td>
+           <td>2W</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>2L</td>
+           <td>.</td>
+           <td>2L</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>2W</td>
+           <td>.</td>
+           <td>.</td>
+         </tr>
+
+         <tr>
+           <td>.</td>
+	   <td>2W</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>3L</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>3L</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>2W</td>
+           <td>.</td>
+         </tr>
+
+         <tr>
+           <td>3W</td>
+	   <td>.</td>
+           <td>.</td>
+           <td>2L</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>3W</td>
+           <td>.</td>
+           <td>.</td>
+           <td>.</td>
+           <td>2L</td>
+           <td>.</td>
+           <td>.</td>
+           <td>3W</td>
+         </tr>
+
        </table>
+
 
     <input type="text" id="myInput">
     <button type="button" id="myBtn">Show Value</button>
+    <button type="button" id="SubmitBtn">Submit Word</button>
+    <label>Points: </label>
+    <label id="move_points">0</label>
   </body>
 </html>
 
