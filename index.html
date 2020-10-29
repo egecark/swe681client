@@ -1,10 +1,28 @@
-<!DOCTYPE html>
+	<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
     <title>Project</title>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
+
+//    const Http = XMLHTTPRequest();
+//
+//    const url='http://127.0.0.1:8000/';
+//
+//    Http.open("GET", url);
+//
+//    Http.send();
+//
+//    Http.onreadystatechange = (e) => {
+//      console.log(Http.responseText)
+//    }
+
+
+    var TRIPLE_WORD_SCORE = [[0,0], [7, 0], [14,0], [0, 7], [14, 7], [0, 14], [7, 14], [14,14]]
+    var DOUBLE_WORD_SCORE = [[1,1], [2,2], [3,3], [4,4], [1, 13], [2, 12], [3, 11], [4, 10], [13, 1], [12, 2], [11, 3], [10, 4], [13,13], [12, 12], [11,11], [10,10]]
+    var TRIPLE_LETTER_SCORE = [[1,5], [1, 9], [5,1], [5,5], [5,9], [5,13], [9,1], [9,5], [9,9], [9,13], [13, 5], [13,9]]
+    var DOUBLE_LETTER_SCORE = [[0, 3], [0,11], [2,6], [2,8], [3,0], [3,7], [3,14], [6,2], [6,6], [6,8], [6,12], [7,3], [7,11], [8,2], [8,6], [8,8], [8, 12], [11,0], [11,7], [11,14], [12,6], [12,8], [14, 3], [14, 11]]
 
     //letters and points should be defined on server side for checks
     var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -22,6 +40,70 @@
         var word_multiplier = 1;
         var letter_multiplier = 1;
         var predicted_score = 0; //Only for display, actually calculated on server
+        var double_letters = [];
+        var triple_letters = [];
+        var double_words = [];
+        var triple_words = [];
+
+
+        //Check if row/col pair is in list of value spaces
+        function array_IndexOf_2D(arr, pair){
+          for(var r = 0; r<arr.length; r++){
+            let check = false;
+            for(var c = 0; c<arr[r].length; c++){
+              if(arr[r][c] == pair[c]){
+                check = true;
+              }
+              else{
+                check = false;
+                break;
+              }
+            }
+            
+            if(check){ return true;}
+          }
+          return false;
+        }
+
+        //calculate score function 
+        function calculate_points(){
+            var points = 0;
+            //Add search of vertical and horizontal for each letter (start by finding top for vertical, left for horizontal)
+            $.each( input_points, function(index, value) {
+              current_letter = value[0]
+              row = value[1];
+              col = value[2];
+              letter_score = parseInt(points_map[current_letter])
+              if(array_IndexOf_2D(TRIPLE_LETTER_SCORE, [row,col])){
+                alert('Triple Letter Score!')
+                triple_letters.push([row,col]);
+                letter_score *= 3;}
+              else if(array_IndexOf_2D(DOUBLE_LETTER_SCORE,[row,col])){
+                alert('Double Letter Score!')
+                double_letters.push([row,col]);
+                letter_score *= 2;}
+              else if(array_IndexOf_2D(DOUBLE_WORD_SCORE,[row,col])){
+                alert('Double Word Score!')
+                double_words.push([row,col]);}
+              else if(array_IndexOf_2D(TRIPLE_WORD_SCORE,[row,col])){
+                alert('Triple Word Score!')
+                triple_words.push([row,col]);}
+
+              points += letter_score;
+              });
+            var move_points = points;
+            document.getElementById("move_points").innerHTML = move_points
+        }
+
+        function calculate_word(word){
+          $.each( word, function(index, value) {
+            letter = value[0];
+            row = value[1];
+            col = value[2];
+          })
+        }
+
+            
 
         //validate input position function
           //inputs: row/col of all input letters
@@ -36,6 +118,16 @@
            //If server says valid move:
              //updates local score display with server response
            //else: restart turn
+
+        $("#SubmitBtn").click(function(){
+            $.get('http://127.0.0.1:8000/dummytest',
+                function (data) {
+                    alert('data:' + JSON.stringify(data));
+                }
+            )
+        });
+        
+
 
         // Get value from button click
         $("#myBtn").click(function(){
@@ -66,10 +158,9 @@
 
 
                 if(!letters.includes(cell_val)){
+                    input_points.push([new_letter,new_row,new_col]) //if database is 1 indexed, need to add 1
                     cell.innerHTML = new_letter; //put input letter into board. Only for show, real thing done on server
-                    var move_points = parseInt(document.getElementById("move_points").innerHTML);
-                    move_points = parseInt(points_map[new_letter]);
-                    document.getElementById("move_points").innerHTML = move_points
+                    calculate_points();
                 }
                 else{ alert("Invalid Move")} //Don't tell user how its invalid
 
