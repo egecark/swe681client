@@ -1,4 +1,4 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -26,7 +26,7 @@
 
     //letters and points should be defined on server side for checks
     var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
-    var points = [1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 4, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10] //Only needed on client for displaying points of word placed on board pre-submit
+    var points  = [ 1 ,  3 ,  3 ,  2 ,  1 ,  4 ,  2 ,  4 ,  1 ,  8 ,  5 ,  1 ,  3 ,  1 ,  1 ,  3 ,  10,  1 ,  1 ,  1 ,  1 ,  4 ,  4 ,  8 ,  4 ,  10] //Only needed on client for displaying points of word placed on board pre-submit
     var points_map = Object.assign.apply({}, letters.map((v,i) => ( {[v]: points[i]}) ) );
     var input_points = []
 
@@ -34,6 +34,9 @@
 
         var scrabble_input_test = new RegExp('^[A-Za-z](-([1-9]|[1][0-5])){2}$'); //regex should be repeated server side
         var scrabble_input;
+        var scrabble_word = [];
+        var next_word;
+        var old_cell_value;
         var new_letter;
         var new_row;
         var new_col;
@@ -44,6 +47,7 @@
         var triple_letters = [];
         var double_words = [];
         var triple_words = [];
+        var empty_board = true;
 
 
         //Check if row/col pair is in list of value spaces
@@ -65,43 +69,237 @@
           return false;
         }
 
-        //calculate score function 
-        function calculate_points(){
+
+        //calculate score function  //might not be used anymore
+        function calculate(){
             var points = 0;
-            //Add search of vertical and horizontal for each letter (start by finding top for vertical, left for horizontal)
+            var letter_values = [];
+
+            var word_orientation = false;
+
+
+          //check if input is vertical word, horizontal word, or invalid
+            var rows_in_input = [];
+            var cols_in_input = [];
+            
+            //collect lists of input rows and cols
+            $.each(input_points, function(index, value) {
+              row = value[1];
+              col = value[2];
+              rows_in_input.push(row);
+              cols_in_input.push(col);
+            })
+
+            //check if the input had multiple rows (implies its a vertical word)
+            var temp_row = rows_in_input[0];
+            $.each(rows_in_input, function(index, value) {
+              if(temp_row != value) {
+                word_orientation = 'vertical';
+                return false; //return false in a each loop is actually a break
+              }
+            })
+
+            //check if the input had multiple cols, but only 1 row (horizontal word)
+            var temp_col = cols_in_input[0];
+            $.each(cols_in_input, function(index, value) {
+              if(temp_col != value) { 
+                if(word_orientation == 'vertical') {
+                  alert('invalid word');
+                  word_orientation = 'invalid';
+                  input_points.pop();
+                  set_table_value(old_cell_value, new_row, new_col);
+                  return false;
+                }
+                word_orientation = 'horizontal';
+              }
+            })
+
+            if(word_orientation == 'invalid') { return false;}
+
+
+/*
+          //Check if input word is on any multiplier spaces
             $.each( input_points, function(index, value) {
               current_letter = value[0]
               row = value[1];
               col = value[2];
-              letter_score = parseInt(points_map[current_letter])
+
+              letter_score = parseInt(points_map[current_letter]);
               if(array_IndexOf_2D(TRIPLE_LETTER_SCORE, [row,col])){
-                alert('Triple Letter Score!')
                 triple_letters.push([row,col]);
                 letter_score *= 3;}
               else if(array_IndexOf_2D(DOUBLE_LETTER_SCORE,[row,col])){
-                alert('Double Letter Score!')
                 double_letters.push([row,col]);
                 letter_score *= 2;}
               else if(array_IndexOf_2D(DOUBLE_WORD_SCORE,[row,col])){
-                alert('Double Word Score!')
                 double_words.push([row,col]);}
               else if(array_IndexOf_2D(TRIPLE_WORD_SCORE,[row,col])){
-                alert('Triple Word Score!')
                 triple_words.push([row,col]);}
 
               points += letter_score;
+              letter_values.push(letter_score);
               });
-            var move_points = points;
-            document.getElementById("move_points").innerHTML = move_points
+*/
+
+            move_points = calculate_points(input_points, word_orientation);
+
+
+            //var move_points = points;
+            document.getElementById("move_points").innerHTML = move_points;
         }
 
-        function calculate_word(word){
+//calculates points for word and all connected words
+        function calculate_points(input_word, word_orientation){
+          var word_score = 0;
+
+          var row = input_word[0][1];
+          var col = input_word[0][2];
+
+          var connected_words = [];
+
+          var word;
+
+          //Find the full word in the row/column and send to the calculate_points function
+          if(word_orientation == 'horizontal') {
+            word = find_word_in_row(new_row, new_col);
+          }
+          else {
+            word = find_word_in_col(new_row, new_col); 
+            if(word.length <=1) { //if word is length 1, wrong direction chosen
+              word_orientation = 'horizontal';
+              word = find_word_in_row(new_row, new_col);
+            }
+          }
+
+
+          //loop through word and store the connected words
+
+          $.each(input_word, function(index, value) {
+            letter = value[0];
+            row = value[1];
+            col = value[2];
+
+            if(word_orientation == 'horizontal') {
+              connected_word = find_word_in_col(row,col);
+            }
+            else { //if(word_orientation == 'vertical') {
+              connected_word = find_word_in_row(row,col);
+            }
+/*            else {
+
+              connected_word1 = find_word_in_col(row,col);
+              connected_word2 = find_word_in_row(row,col);
+              if(connected_word1.length > 1) {
+                connected_words.push(connected_word1);
+              }
+              if(connected_word2.length > 1) {
+                connected_words.push(connected_word2);
+              }
+              return false; //break out of each statement
+            }
+*/              
+
+            if(connected_word.length > 1) {
+            
+              connected_words.push(connected_word); //push letter to word array
+            }
+          })              
+
+
+          //mark multipliers for newest letter
+          row = new_row;
+          col = new_col;
+          if(array_IndexOf_2D(TRIPLE_LETTER_SCORE, [row,col])){
+            triple_letters.push([row,col]);
+          }
+          else if(array_IndexOf_2D(DOUBLE_LETTER_SCORE,[row,col])){
+            double_letters.push([row,col]);
+          }
+          else if(array_IndexOf_2D(DOUBLE_WORD_SCORE,[row,col])){
+            double_words.push([row,col]);
+          }
+          else if(array_IndexOf_2D(TRIPLE_WORD_SCORE,[row,col])){
+            triple_words.push([row,col])
+          }
+
+          var word_points = 0;  
+
+          //Calculate score of main word and apply modifiers in main word
           $.each( word, function(index, value) {
             letter = value[0];
             row = value[1];
             col = value[2];
+            letter_score = parseInt(points_map[letter]);
+
+
+            if(array_IndexOf_2D(triple_letters, [row,col])){
+              letter_score *= 3;
+            }
+            else if(array_IndexOf_2D(double_letters,[row,col])){
+              letter_score *= 2;
+            }
+
+
+            word_points += letter_score;
           })
-        }
+/*
+          alert('double mod');
+          alert(double_words.length);
+          alert(2**double_words.length);
+          alert('triple mod');
+          alert(triple_words.length);
+          alert(3**triple_words.length);
+*/
+
+          //Multiply word modifiers to main word score
+          word_points *= 2**double_words.length * 3**triple_words.length;
+
+          //calculate score of connected_words
+          $.each(connected_words, function(index, single_word) {
+
+            var triple_multiplier = 1;
+            var double_multiplier = 1;
+            var connected_word_points = 0;
+
+            $.each(single_word, function(index, value) {
+              letter = value[0];
+              row = value[1];
+              col = value[2];
+              letter_score = parseInt(points_map[letter]);
+
+              if(array_IndexOf_2D(triple_letters, [row, col])) {
+                letter_score *= 3;
+              }
+              else if(array_IndexOf_2D(double_letters, [row, col])) {
+                letter_score *= 2;
+              }
+
+                
+              if(array_IndexOf_2D(triple_words, [row, col])) {
+                triple_multiplier *= 3;
+              }
+              if(array_IndexOf_2D(double_words, [row, col])) {
+                double_multiplier *= 2;
+              }
+
+              connected_word_points += letter_score
+
+            }) //end $.each(single_word, function(index, value)
+
+            connected_word_points *= triple_multiplier * double_multiplier;
+
+            word_points += connected_word_points;
+
+          }) //end $.each(connected_words, function(index, single_word)
+        
+          /*           
+          alert('list of connected words');
+          alert(connected_words);
+          alert('total points');
+          alert(word_points);
+          */
+          return word_points;
+        } //end function calculate_points(word, word_orientation)
 
             
 
@@ -120,7 +318,20 @@
            //else: restart turn
 
         $("#SubmitBtn").click(function(){
-            $.get('http://127.0.0.1:8000/dummytest',
+            input_points = [];
+            double_letters = [];
+            double_words = [];
+            triple_letters = [];
+            triple_words = [];
+            return;
+
+            $.post('http://127.0.0.1:8000/dummytest/',
+                { value: scrabble_word.join(",")},
+                function(data, status, jqXHR) {
+                    $('p').append('status: ' + status + ', data: ' + data);
+            }).done(function() { alert('data sent!'); }) //remove data sent once done testing !!
+
+            $.get('http://127.0.0.1:8000/dummytest/',
                 function (data) {
                     alert('data:' + JSON.stringify(data));
                 }
@@ -128,39 +339,167 @@
         });
         
 
+        function get_table_value(row, col) {
+           if(col >=15) {return false;}
+           if(col <0) {return false;}
+           if(row >=15) {return false;}
+           if(row < 0) {return false;}
+           if(isNaN(row)) { return false;}
+           if(isNaN(col)) { return false;}
+           //get elements of board
+            var board = document.getElementById("Board"),
+            rows = board.getElementsByTagName('tr'),
+            i, j, cell, value;
+
+            var cols = rows[row].getElementsByTagName('td');
+
+            cell = cols[col];
+
+            cell_value = cell.innerHTML;
+
+            //if(!letters.includes(cell_value)){return false;} //replace with check for all valid values (letters, empty, 2W, 3W, 2L, 3L)
+
+            return cell_value;
+        }
+
+        function set_table_value(value, row, col) {
+
+           //get elements of board
+            var board = document.getElementById("Board"),
+            rows = board.getElementsByTagName('tr'),
+            i, j, cell, value;
+
+            var cols = rows[row].getElementsByTagName('td');
+
+            cell = cols[col];
+            cell.innerHTML = value;            
+
+        }
+
+        function find_word_in_row(row, col) {
+
+           //get elements of board
+            var board = document.getElementById("Board"),
+            rows = board.getElementsByTagName('tr'),
+
+            line = rows[row].getElementsByTagName('td');
+
+            var row_word_indices = [];
+            letter = get_table_value(row,col);
+            row_word_indices.push([letter,row,col]);
+
+            //Check for continuation of word after inserted letter
+            for (i = col+1; i < 15; i++) {
+                letter = line[i].innerHTML;
+                if(!letters.includes(letter)){ break;}
+                row_word_indices.push([letter,row,i]);
+                
+            }
+
+            //check if col is already 0
+
+            //check if word started before inserted letter
+            for (i = col-1; i >= 0; i--) {
+                letter = line[i].innerHTML;
+                if(!letters.includes(letter)){ break;}
+                row_word_indices.push([letter,row,i]);
+                
+            }
+
+
+            row_word_indices.sort(function(a,b) {
+                return a[2] - b[2];});
+
+/*
+            alert("word in row");
+            alert(row_word_indices);
+*/
+            return row_word_indices;
+
+        }
+
+
+        function find_word_in_col(row, col) {
+
+           //get elements of board
+            var board = document.getElementById("Board"),
+            rows = board.getElementsByTagName('tr');
+
+            var col_word_indices = [];
+            letter = get_table_value(row,col);
+            col_word_indices.push([letter,row,col]);
+
+            //Check for continuation of word after inserted letter
+            for (i = row+1; i < 15; i++) {
+                line = rows[i].getElementsByTagName('td');
+                letter = line[col].innerHTML;
+                if(!letters.includes(letter)){ break;}
+                col_word_indices.push([letter,i,col]);
+            }
+
+            //check if row is already 0 (otherwise  subtracting 1 bad)
+
+            //check if word started before inserted letter
+            for (i = row-1; i >= 0; i--) {
+                line = rows[i].getElementsByTagName('td');
+                letter = line[col].innerHTML;
+                if(!letters.includes(letter)){ break;}
+                col_word_indices.push([letter,i,col]);
+                
+            }
+
+
+            col_word_indices.sort(function(a,b) {
+                return a[1] - b[1];});
+
+/*
+            alert("word in col");
+            alert(col_word_indices);
+*/
+            return col_word_indices;
+
+        }
+
 
         // Get value from button click
         $("#myBtn").click(function(){
             var user_input = $("#myInput").val();
             if(scrabble_input_test.test(user_input)){
                 scrabble_input = user_input.split('-'); //Get individual components of scrabble move (<letter>-<row>-<col>)
+                scrabble_word.push(scrabble_input);
                 //alert(scrabble_input);
                 new_letter = scrabble_input[0].toUpperCase();
                 new_row = scrabble_input[1]-1; //subtract one bc zero indexed
                 new_col = scrabble_input[2]-1;
 
                //get elements of board
-                var board = document.getElementById("Board"), 
-                    rows = board.getElementsByTagName('tr'),
-                    i, j, cell, value;
+//                var board = document.getElementById("Board"), 
+//                    rows = board.getElementsByTagName('tr'),
+//                    i, j, cell, value;
 
-                var cols = rows[new_row].getElementsByTagName('td');
+//                var cols = rows[new_row].getElementsByTagName('td');
                 
-                cell = cols[new_col];
-                var cell_val = cell.innerHTML;
+//                cell = cols[new_col];
+//                var cell_val = cell.innerHTML;
                 //alert(cell_val);
 
                 //Repeat following score multiplier checks on server
-                if(cell_val=='3W'){word_multiplier = 3;}
-                if(cell_val=='2W'){word_multiplier = 2;}
-                if(cell_val=='3L'){letter_multiplier = 3;}
-                if(cell_val=='2L'){letter_multiplier = 2;}
+//                if(cell_val=='3W'){word_multiplier = 3;}
+//                if(cell_val=='2W'){word_multiplier = 2;}
+//                if(cell_val=='3L'){letter_multiplier = 3;}
+//                if(cell_val=='2L'){letter_multiplier = 2;}
 
 
-                if(!letters.includes(cell_val)){
+                if(!letters.includes(get_table_value(new_row,new_col))){
                     input_points.push([new_letter,new_row,new_col]) //if database is 1 indexed, need to add 1
-                    cell.innerHTML = new_letter; //put input letter into board. Only for show, real thing done on server
-                    calculate_points();
+                    input_points.sort( function(a,b) {
+                        return a[1]-b[1] + a[2] - b[2]; //sort input word into left-right, top-bottom order
+                    });
+                   // alert(input_points);
+                    old_cell_value = get_table_value(new_row,new_col);
+                    set_table_value(new_letter, new_row, new_col)
+//                    cell.innerHTML = new_letter; //put input letter into board. Only for show, real thing done on server
+                    calculate();
                 }
                 else{ alert("Invalid Move")} //Don't tell user how its invalid
 
@@ -195,271 +534,271 @@
          <table id="Board">
          <tr>
            <td>3W</td>
-	   <td>.</td>
-           <td>.</td>
+	   <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>3W</td>
          </tr>
 
          <tr>
-           <td>.</td>
+           <td> </td>
 	   <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
+           <td> </td>
+	   <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
            <td>2L</td>
-	   <td>.</td>
-           <td>.</td>
+	   <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+	   <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
+           <td> </td>
 	   <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
+           <td> </td>
+	   <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
 	   <td>3W</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>X</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>3W</td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
+           <td> </td>
+	   <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
+           <td> </td>
 	   <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+	   <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
            <td>2L</td>
-	   <td>.</td>
-           <td>.</td>
+	   <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
          </tr>
 
          <tr>
-           <td>.</td>
-	   <td>.</td>
+           <td> </td>
+	   <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
          </tr>
 
          <tr>
-           <td>.</td>
+           <td> </td>
 	   <td>2W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2W</td>
-           <td>.</td>
+           <td> </td>
          </tr>
 
          <tr>
            <td>3W</td>
-	   <td>.</td>
-           <td>.</td>
+	   <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>3W</td>
-           <td>.</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
+           <td> </td>
            <td>2L</td>
-           <td>.</td>
-           <td>.</td>
+           <td> </td>
+           <td> </td>
            <td>3W</td>
          </tr>
 
