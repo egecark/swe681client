@@ -28,6 +28,7 @@
     var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
     var points  = [ 1 ,  3 ,  3 ,  2 ,  1 ,  4 ,  2 ,  4 ,  1 ,  8 ,  5 ,  1 ,  3 ,  1 ,  1 ,  3 ,  10,  1 ,  1 ,  1 ,  1 ,  4 ,  4 ,  8 ,  4 ,  10] //Only needed on client for displaying points of word placed on board pre-submit
     var points_map = Object.assign.apply({}, letters.map((v,i) => ( {[v]: points[i]}) ) );
+    var previous_board_state = [['3W','','','2L','','','','3W','','','','2L','','','3W'],['','2W','','','','3L','','','','3L','','','','2W',''],['','','2W','','','','2L','','2L','','','','2W','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','','','2W','','','','','','2W','','','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','2L','','','','2L','','2L','','','','2L','',''],['3W','','','2L','','','','X','','','','2L','','','3W'],['','','2L','','','','2L','','2L','','','','2L','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','','','2W','','','','','','2W','','','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','2W','','','','2L','','2L','','','','2W','',''],['','2W','','','','3L','','','','3L','','','','2W',''],['3W','','','2L','','','','3W','','','','2L','','','3W']];
     var input_points = []
 
     $(document).ready(function(){
@@ -323,6 +324,8 @@
             double_words = [];
             triple_letters = [];
             triple_words = [];
+
+            record_board_state();
             return;
 
             $.post('http://127.0.0.1:8000/dummytest/',
@@ -337,6 +340,10 @@
                 }
             )
         });
+
+        $("#ResetBtn").click(function(){
+          set_board(previous_board_state);
+        })
         
 
         function get_table_value(row, col) {
@@ -410,10 +417,6 @@
             row_word_indices.sort(function(a,b) {
                 return a[2] - b[2];});
 
-/*
-            alert("word in row");
-            alert(row_word_indices);
-*/
             return row_word_indices;
 
         }
@@ -452,14 +455,56 @@
             col_word_indices.sort(function(a,b) {
                 return a[1] - b[1];});
 
-/*
-            alert("word in col");
-            alert(col_word_indices);
-*/
             return col_word_indices;
 
         }
 
+        function set_board(board_state) {
+
+          board_state_dimensions = getDim(board_state);
+          if(board_state_dimensions) {
+            if(board_state_dimensions != 15) {
+              alert('invalid board state requested');
+              alert(board_state_dimensions);
+              return false;
+            }
+          }
+          else {
+            return false;
+          }
+
+          for(let row=0; row < 15; row++) {
+            for(let col=0; col < 15; col++) {
+              set_table_value(board_state[row][col],row,col);
+            }
+          }
+        }
+
+        function record_board_state() {
+          for(let row=0; row < 15; row++) {
+            for(let col=0; col < 15; col++) {
+              temp = get_table_value(row,col);
+              previous_board_state[row][col] = temp;
+            }
+          }
+          
+        }
+
+
+        function getDim(x){
+            dim = x[0].length;
+            try {
+              // throw error if the passed variable is a string or a scalar
+              if((isFinite(x) && !x.length) || typeof(x)=='string') throw  'This is a scalar or a string  not an array!';
+              for(let i=1; i < x.length; i++) {
+                if(dim != x[i].length) {return false;}
+
+              }
+            return dim
+            } catch (error) {
+                return error;
+            }
+        }
 
         // Get value from button click
         $("#myBtn").click(function(){
@@ -808,6 +853,7 @@
     <input type="text" id="myInput">
     <button type="button" id="myBtn">Show Value</button>
     <button type="button" id="SubmitBtn">Submit Word</button>
+    <button type="button" id="ResetBtn">Reset Move</button>
     <label>Points: </label>
     <label id="move_points">0</label>
   </body>
