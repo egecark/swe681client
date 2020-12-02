@@ -33,8 +33,10 @@
     var previous_board_state = [['3W','','','2L','','','','3W','','','','2L','','','3W'],['','2W','','','','3L','','','','3L','','','','2W',''],['','','2W','','','','2L','','2L','','','','2W','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','','','2W','','','','','','2W','','','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','2L','','','','2L','','2L','','','','2L','',''],['3W','','','2L','','','','X','','','','2L','','','3W'],['','','2L','','','','2L','','2L','','','','2L','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','','','2W','','','','','','2W','','','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','2W','','','','2L','','2L','','','','2W','',''],['','2W','','','','3L','','','','3L','','','','2W',''],['3W','','','2L','','','','3W','','','','2L','','','3W']];
     var input_points = []
 
+    var game_started = false;
     var is_user_turn = false;
     var username = 'user1';
+    var enemy_username = false;
 
     $(document).ready(function(){
 
@@ -97,6 +99,10 @@
                 is_user_turn = false;
               }
 
+              //check if board needs to be read into an array
+              alert(board);
+              set_board(data.board);              
+
             },
             complete: function() {
               // Schedule the next request when the current one is complete
@@ -104,6 +110,53 @@
             }
           });
         })();
+
+        //Poll server for new game
+        function request_game() {
+
+          //url = '127.0.0.1:8000/game/turn'
+          url = 'http://ec2-34-228-9-251.compute-1.amazonaws.com:8000/test/game/findgame'
+          $.ajax({
+            url: url, 
+            success: function(data) {
+              if(!data.length) { 
+                return;
+              }
+
+              if(data == 'waiting_for_game') { return false;}
+
+              if(data == 'you gotta authenticate') { return false;}
+
+              alert('starting game');
+
+              game_started = true;
+
+              //assign enemy username
+              if(username == data.username1) { 
+                  enemy_username = data.username2;
+              }
+              else { 
+                  enemy_username = data.username1;
+              }
+
+              //set game id
+              game_id = data.game_id;
+
+              //set whose turn it is
+              if(username == data.turn) {
+                  is_user_turn = true;
+              }
+
+            },
+            complete: function() {
+              // Schedule the next request when the current one is complete
+              if(!game_started) {
+                  setTimeout(request_game, 5000);
+              }
+              else { $("#findGameBtn").remove();}
+            }
+          });
+        }; 
 
 
         //calculate score function
@@ -313,6 +366,12 @@
           return word_points;
         } //end function calculate_points(word, word_orientation)
 
+
+        // Get value from button click
+        $("#findGameBtn").click(function(){
+            alert('searching for game');
+            request_game();
+        })
             
 
         //validate input position function
@@ -599,6 +658,7 @@
   </head>
   <body>
     <h1>Scrabble</h1>
+      <button type="button" id="findGameBtn">Find Game</button>
       <label>User1: </label>
       <label id="user_score">0</label>
       <br/>
