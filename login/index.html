@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+
+    var token = false;
+
+    $(document).ready(function(){
+        // Get value from button click
+        $("#LoginBtn").click(function(){
+
+            var username = $("#usernameInput").val();
+            //need to salt and hash password probably
+            var password = $("#passwordInput").val();
+
+
+            url = 'https://swe681project.com/account/login'
+            $.ajax({
+              url: url,
+              type: "POST",
+              data: {username:username, password:password},
+              success: function(data) {
+
+                  if(data == 'invalid login') {
+                      alert(data);
+                  }
+
+                  token = data['token'];
+
+                  alert(token);
+              },
+              error: function (err){
+                alert(err);
+              }
+          });
+        
+
+        });
+    });
+    </script>
+
+
+  </head>
+  <body>
+    <h1>Login</h1>
+      <input type="text" id="usernameInput" value="username">
+      <br>
+      <input type="text" id="passwordInput" value="password">
+      <br>
+      <button type="button" id="LoginBtn">Login</button>
+  </body>
+</html>
+
