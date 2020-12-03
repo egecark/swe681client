@@ -1,0 +1,18 @@
+<h1>Dashboard</h1>
+
+{% block content %}
+Hello, {{ user.username|default:'Guest' }}!
+
+<div>
+    {% if user.is_authenticated %}
+        <a href="{% url 'testing:logout' %}">Logout</a>
+    {% else %}
+        <a href="{% url 'testing:login' %}">Login</a>
+    {% endif %}
+    <br>
+    <a href="{% url 'testing:game' %}">Game</a>
+    <br>
+    <a href="{% url 'testing:register' %}">Register</a>
+</div>
+
+{% endblock %}
