@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Find Game</title>
+    
+    <style>
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        vertical-align: middle;
+        contenteditable: true;
+      }
+
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+    <script>
+    $(document).ready(function(){
+        $("#GetMatchesBtn").click(function(){
+            url = 'https://swe681project.com/test/matches/'
+            $.ajax({
+              url: url,
+              type: "GET",
+              success: function(data) {
+
+                  if(!data) {
+                      alert('No available matches');
+                      return;
+                  }
+                  
+
+                  var html = '<tr><th>game id</th><th>user 1</th><th>user 2</th><th>user 3</th><th>user 4</th><th>number of players</th>';
+                  
+                  $.each(data,function(key,value){
+                      html +='<tr>';
+                      html +='<td>'+ value.id + '</td>';
+                      html +='<td>'+ value.client1 + '</td>';
+                      html +='<td>'+ value.client2 + '</td>';
+                      html +='<td>'+ value.client3 + '</td>';
+                      html +='<td>'+ value.client4 + '</td>';
+                      html +='<td>'+ value.num_players + '</td>';
+                      html +='</tr>';
+                  });
+
+                  $("#match_tables").dialog({
+                      height: 140,
+                      modal: true,
+                      
+                  });
+
+                  $("#match_tables").show();
+
+                  $("#match_tables").html(html);
+
+
+              },
+              error: function (err){
+                alert(err);
+              }
+          });
+        
+
+        });
+
+        $("#JoinBtn").click(function(){
+
+            var game_id = $("#game_id").val();
+
+            url = 'https://swe681project.com/test/join/game_id/'
+            $.ajax({
+              url: url,
+              type: "POST",
+              data: {matchmaking_id:game_id},
+              success: function(data) {
+
+                  if(data == 'You\'re already in the game') {
+                      alert("Joined game. Waiting for other players");
+                  }
+
+                  if(!data) {
+                      alert('invalid response');
+                      return;
+                  }
+
+                  if(data.game_id == game_id) {
+                      $.redirect('https://swe681project.com/test/game/', data);
+                  }
+                  else {
+                      alert('server sent invalid game request');
+                  }
+
+              },
+              error: function (err){
+                alert(err);
+              }
+          });
+        
+
+        });
+
+    $("#MatchSubmitButton").on('click', function () {
+
+      var num_players = $("#NewNumPlayers").val();
+      var id = $("#NewGameId").val();
+      url = 'https://swe681project.com/test/join/game_id/'
+      $.ajax({
+          url: url,
+          type: "POST",
+          data: {num_players:num_players, id:id, 'csrfmiddlewaretoken':$( "#csrfmiddlewaretoken" ).val()},
+          success: function(data) {
+
+              if(!data) {
+                  alert('invalid response');
+                  return;
+              }
+        
+              if(data.id) {
+                  $.redirect('https://swe681project.com/test/game/', data);
+              }
+              else {
+                  alert('server sent invalid game request');
+              }
+
+          },
+          error: function (err){
+            alert(err);
+          }
+      });
+    })
+
+    $("#MakeMatchBtn").on('click', function () {
+        $("#match_form").dialog({
+          height: 140,
+          modal: true,
+        });
+
+        $("#match_form").show();
+    })
+
+
+    });
+
+
+    </script>
+
+
+  </head>
+
+  <body>
+
+
+    <h1>Select a game to join from the list of matches</h1>
+      <button type="button" id="GetMatchesBtn">Get list of matches</button>
+      <br>
+      <h2>game id</h2>
+      <input type="text" id="game_id">
+      <br>
+      <button type="button" id="JoinBtn">Join Game</button>
+      <br>
+      <br>
+      <button type="button" id="MakeMatchBtn">Create a match</button>
+
+      <div id="match_form" style="display:none">
+          <form>
+              Game ID<input type="text" id="NewGameId" name="id">
+              <br>
+              Number of players<input type="text" id="NewNumPlayers" name="num_players" value="4">
+              <br><br>
+              <input type="button" id="MatchSubmitButton" value="Submit">
+          </form>
+      </div>
+
+
+      <div id="match_tables" style="display:none">
+          <table class="innerTable">
+               <tbody>
+               </tbody>
+          </table>
+      </div>
+
+  </body>
+</html>
+
