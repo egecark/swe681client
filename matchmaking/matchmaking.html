@@ -1,5 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% block content %}
+
+
   <head>
     <meta charset="utf-8">
     <title>Find Game</title>
@@ -22,8 +23,9 @@
 
     <script>
     $(document).ready(function(){
+
         $("#GetMatchesBtn").click(function(){
-            url = 'https://swe681project.com/test/matches/'
+            url = 'https://swe681project.com/matches/'
             $.ajax({
               url: url,
               type: "GET",
@@ -64,23 +66,34 @@
                 alert(err);
               }
           });
-        
+       
 
         });
 
-        $("#JoinBtn").click(function(){
+        $("#JoinSubmitBtn").click(function()  {
+            id = $("#id_id").val();
+            $("#joinform").attr('action', 'https://swe681project.com/join/' + id + '/');	
+        })
 
-            var game_id = $("#game_id").val();
+        $("#joinform").submit(function (event) {
+            event.preventDefault();
 
-            url = 'https://swe681project.com/test/join/game_id/'
+            url = 'https://swe681project.com/join/' + $("#id_id").val() + '/'
+
             $.ajax({
               url: url,
-              type: "POST",
-              data: {matchmaking_id:game_id},
+              type: $(this).attr('method'),
+              data: $(this).serialize(),
               success: function(data) {
 
                   if(data == 'You\'re already in the game') {
-                      alert("Joined game. Waiting for other players");
+                      alert("You can't join a game you're already part of");
+                      return;
+                  }
+
+                  if(data == 'Invalid match id') {
+                      alert("Bad match id");
+                      return;
                   }
 
                   if(!data) {
@@ -88,53 +101,69 @@
                       return;
                   }
 
-                  if(data.game_id == game_id) {
-                      $.redirect('https://swe681project.com/test/game/', data);
+                  if(data.game_id) {
+                      return;
+                      //window.location.href = 'https://swe681project.com/game/';
                   }
                   else {
                       alert('server sent invalid game request');
                   }
 
               },
+              complete: function(data) {
+                  return;
+              },
               error: function (err){
                 alert(err);
               }
-          });
-        
+            });
 
-        });
 
-    $("#MatchSubmitButton").on('click', function () {
+        })
 
-      var num_players = $("#NewNumPlayers").val();
-      var id = $("#NewGameId").val();
-      url = 'https://swe681project.com/test/join/game_id/'
-      $.ajax({
-          url: url,
-          type: "POST",
-          data: {num_players:num_players, id:id, 'csrfmiddlewaretoken':$( "#csrfmiddlewaretoken" ).val()},
-          success: function(data) {
+        $("#hostform").submit(function (event) {
+            event.preventDefault();
 
-              if(!data) {
-                  alert('invalid response');
+            url = 'https://swe681project.com/host/'
+
+            $.ajax({
+              url: url,
+              type: $(this).attr('method'),
+              data: $(this).serialize(),
+              success: function(data) {
+
+                  if(!data) {
+                      alert('invalid response');
+                      return;
+                  }
+
+                  //Note: does not seem to return any error with invalid number of users
+                  //go to game if host successful
+                  window.location.href = 'https://swe681project.com/game/';
+
+              },
+              complete: function(data) {
                   return;
+              },
+              error: function (err){
+                alert(err);
               }
-        
-              if(data.id) {
-                  $.redirect('https://swe681project.com/test/game/', data);
-              }
-              else {
-                  alert('server sent invalid game request');
-              }
+            });
 
-          },
-          error: function (err){
-            alert(err);
-          }
-      });
+
+        })
+
+
+    $(joinform).on('frmFormComplete', function(event, form, response) {
+        alert(response);
+    })
+
+    $(hostform).on('frmFormComplete', function(event, form, response) {
+        alert(response);
     })
 
     $("#MakeMatchBtn").on('click', function () {
+
         $("#match_form").dialog({
           height: 140,
           modal: true,
@@ -154,17 +183,22 @@
 
   <body>
 
-
     <h1>Select a game to join from the list of matches</h1>
+      <form method="post" id="joinform" action="temp">
+          {% csrf_token %}
+          {{ joinform.as_p }}
+          <input type="submit" id="JoinSubmitBtn" value="Join">
+
+      </form>
       <button type="button" id="GetMatchesBtn">Get list of matches</button>
       <br>
-      <h2>game id</h2>
-      <input type="text" id="game_id">
       <br>
-      <button type="button" id="JoinBtn">Join Game</button>
-      <br>
-      <br>
-      <button type="button" id="MakeMatchBtn">Create a match</button>
+      <form method="post" id="hostform" action='https://swe681project.com/host/'>
+          {% csrf_token %}
+          {{ hostform.as_p }}
+          <input type="submit" id="HostSubmitBtn" value="Host">
+
+      </form>
 
       <div id="match_form" style="display:none">
           <form>
@@ -184,6 +218,9 @@
           </table>
       </div>
 
-  </body>
-</html>
 
+  </body>
+
+
+
+{% endblock %}

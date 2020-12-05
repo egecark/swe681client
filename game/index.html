@@ -6,19 +6,6 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script>
 
-//    const Http = XMLHTTPRequest();
-//
-//    const url='http://127.0.0.1:8000/';
-//
-//    Http.open("GET", url);
-//
-//    Http.send();
-//
-//    Http.onreadystatechange = (e) => {
-//      console.log(Http.responseText)
-//    }
-
-
     var TRIPLE_WORD_SCORE = [[0,0], [7, 0], [14,0], [0, 7], [14, 7], [0, 14], [7, 14], [14,14]]
     var DOUBLE_WORD_SCORE = [[1,1], [2,2], [3,3], [4,4], [1, 13], [2, 12], [3, 11], [4, 10], [13, 1], [12, 2], [11, 3], [10, 4], [13,13], [12, 12], [11,11], [10,10]]
     var TRIPLE_LETTER_SCORE = [[1,5], [1, 9], [5,1], [5,5], [5,9], [5,13], [9,1], [9,5], [9,9], [9,13], [13, 5], [13,9]]
@@ -28,15 +15,22 @@
     var letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
     var points  = [ 1 ,  3 ,  3 ,  2 ,  1 ,  4 ,  2 ,  4 ,  1 ,  8 ,  5 ,  1 ,  3 ,  1 ,  1 ,  3 ,  10,  1 ,  1 ,  1 ,  1 ,  4 ,  4 ,  8 ,  4 ,  10] //Only needed on client for displaying points of word placed on board pre-submit
     var points_map = Object.assign.apply({}, letters.map((v,i) => ( {[v]: points[i]}) ) );
-    var scrabble_values = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", '','2L','2W','3L','3W']
+    var scrabble_values = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", ' ','2L','2W','3L','3W']
 
-    var previous_board_state = [['3W','','','2L','','','','3W','','','','2L','','','3W'],['','2W','','','','3L','','','','3L','','','','2W',''],['','','2W','','','','2L','','2L','','','','2W','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','','','2W','','','','','','2W','','','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','2L','','','','2L','','2L','','','','2L','',''],['3W','','','2L','','','','X','','','','2L','','','3W'],['','','2L','','','','2L','','2L','','','','2L','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','','','2W','','','','','','2W','','','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','2W','','','','2L','','2L','','','','2W','',''],['','2W','','','','3L','','','','3L','','','','2W',''],['3W','','','2L','','','','3W','','','','2L','','','3W']];
+    var previous_board_state = [['3W','','','2L','','','','3W','','','','2L','','','3W'],['','2W','','','','3L','','','','3L','','','','2W',''],['','','2W','','','','2L','','2L','','','','2W','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','','','2W','','','','','','2W','','','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','2L','','','','2L','','2L','','','','2L','',''],['3W','','','2L','','','','','','','','2L','','','3W'],['','','2L','','','','2L','','2L','','','','2L','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','','','2W','','','','','','2W','','','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','2W','','','','2L','','2L','','','','2W','',''],['','2W','','','','3L','','','','3L','','','','2W',''],['3W','','','2L','','','','3W','','','','2L','','','3W']];
     var input_points = []
 
     var game_started = false;
     var is_user_turn = false;
-    var username = 'user1';
-    var enemy_username = false;
+    var user1 = '';
+    var user2 = '';
+    var user3 = '';
+    var user4 = '';
+
+    {% block content %}
+    var username = '{{ user.username}}'
+    {% endblock %}
+
 
     $(document).ready(function(){
 
@@ -83,15 +77,38 @@
         //Poll server for which user's turn it is with timeout. If server says current turn belongs to the client's username, set is_user_turn to true, otherwise set to false
         (function check_for_turn_change() {
 
-          //url = '127.0.0.1:8000/game/turn'
-          url = 'https://swe681project.com/game/turn'
+          url = 'https://swe681project.com/game/turn/'
           $.ajax({
             url: url, 
             success: function(data) {
-              if(!data.length) { 
+              if(!data) { 
                 return;
               }
               if(data == 'game_not_started') { return false;}
+
+
+              if(!game_started) {
+                  game_started = true;
+                  if(data.client1) {
+                      user1 = data.client1;
+                      $("user1").innerhtml = data.client1;
+                  }
+                  if(data.client2) {
+                      user2 = data.client2;
+                      $("user2").text(user2);
+                  }
+                  if(data.client3) {
+                      user3 = data.client3;
+                      $("user3").html(user3);
+                  }
+                  if(data.client4) {
+                      user4 = data.client4;
+                      $("user4").html(user4);
+                  }
+
+              }
+
+
               if(data.turn == username) {
                 is_user_turn = true;
               }
@@ -99,7 +116,7 @@
                 is_user_turn = false;
               }
 
-              input_board = data.board;
+              input_board = get_board(data.board);
 
               //check if board needs to be read into an array
               set_board(input_board);              
@@ -112,10 +129,10 @@
           });
         })();
 
+/*
         //Poll server for new game
         function request_game() {
 
-          //url = '127.0.0.1:8000/game/turn'
           url = 'https://swe681project.com/game/findgame'
           $.ajax({
             url: url, 
@@ -158,7 +175,7 @@
             }
           });
         }; 
-
+*/
 
         //calculate score function
         function calculate(){
@@ -392,7 +409,7 @@
         $("#SubmitBtn").click(function(){
 
           if(!is_user_turn){ 
-            alert('You cannot do things wen its not your turn');
+            alert('You cannot do things when its not your turn');
             return false;
           }
 
@@ -539,6 +556,60 @@
 
         }
 
+        function get_board(board) {
+
+            let row = 0;
+            let col = 0;
+
+            let board_array = Array(15).fill().map(() => Array(15).fill(' '));;
+
+            if(board.charAt(0) != '[') { return false;}
+            if(board.charAt(board.length-1) != ']') { return false;}
+
+            let i = 0;
+            while(i < board.length - 1) {
+                i++;
+
+                let char = board.charAt(i);
+
+                if(char == ',') {
+                    continue;
+                }
+                if(char == '[') {
+                    continue;
+                }
+                if(char == ']') {
+                    row += 1;
+                    col = 0;
+                    continue;
+                }
+                if(char == '\'') {
+                    if(board.charAt(i+1) == '\'') {
+                        col += 1;
+                        i++;
+                     }
+                    continue;
+                }
+                if(char == ' ') {
+                    continue;
+                }
+
+
+                if(char == '3' || char == '2') {
+                    board_array[row][col] = '' + char + board.charAt(i+1)
+                    i++;
+                }
+                else {
+                    board_array[row][col] = char;
+                }
+
+                 col += 1;
+
+            }
+
+            return board_array;
+        }
+
         function set_board(board_state) {
 
           board_state_dimensions = getDim(board_state);
@@ -594,7 +665,7 @@
         // Get value from button click
         $("#myBtn").click(function(){
             if(!is_user_turn){ 
-              alert('You cannot do things wen its not your turn');
+              alert('You cannot do things when its not your turn');
               return false;
             }
 
@@ -659,13 +730,22 @@
   </head>
   <body>
     <h1>Scrabble</h1>
-      <button type="button" id="findGameBtn">Find Game</button>
-      <br/>
-      <label>User1: </label>
-      <label id="user_score">0</label>
-      <br/>
-      <label>User2: </label>
-      <label id="enemy_score">0</label>
+      {% block content2 %}
+      Hello, {{ user.username|default:'Guest' }}!
+      {% endblock %}
+      <label id="user1"></label>
+      <label id="user1_score"></label>
+      <br>
+      <label id="user2"> </label>
+      <label id="user2_score"></label>
+      <br>
+      <label id="user3"></label>
+      <label id="user3_score"></label>
+      <br>
+      <label id="user4"></label>
+      <label id="user4_score"></label>
+      <br>
+      <br>
 
        <table>
          <table id="Board">
@@ -803,7 +883,7 @@
            <td> </td>
            <td> </td>
            <td> </td>
-           <td>X</td>
+           <td> </td>
            <td> </td>
            <td> </td>
            <td> </td>

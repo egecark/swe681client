@@ -10,9 +10,11 @@ Hello, {{ user.username|default:'Guest' }}!
         <a href="{% url 'testing:login' %}">Login</a>
     {% endif %}
     <br>
-    <a href="{% url 'testing:game' %}">Game</a>
-    <br>
     <a href="{% url 'testing:register' %}">Register</a>
+    <br>
+    <a href="{% url 'testing:game' %}">Resume Game</a>
+    <br>
+    <a href="{% url 'testing:join' %}">Join or Host a Game</a>
 </div>
 
 {% endblock %}
