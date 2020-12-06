@@ -1,3 +1,5 @@
+{% block content %}
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -22,6 +24,7 @@
 
     var game_started = false;
     var is_user_turn = false;
+    var current_turn = 0;
     var user1 = '';
     var user2 = '';
     var user3 = '';
@@ -29,10 +32,8 @@
 
     var user_num = false;
 
-    {% block content %}
     var username = '{{ user.username}}'
     var id = '{{ user.id }}'
-    {% endblock %}
 
 
     $(document).ready(function(){
@@ -55,6 +56,13 @@
         var empty_board = true;
         var move_points = 0;
         var user_score = 0;
+
+        let game_url = window.location.href;
+        let game_url_split = game_url.split('/');
+        var game_id = game_url_split.pop();
+        if(!game_id) { game_id = game_url_split.pop();}
+
+
 
 
         //Check if row/col pair is in list of value spaces
@@ -80,11 +88,6 @@
         //Poll server for which user's turn it is with timeout. If server says current turn belongs to the client's username, set is_user_turn to true, otherwise set to false
         (function check_for_turn_change() {
 
-          let game_url = window.location.href;
-          let game_url_split = game_url.split('/');
-          let game_id = game_url_split.pop();
-          if(!game_id) { game_id = game_url_split.pop();}
-
           url = 'https://swe681project.com/game/turn/' + game_id;
           $.ajax({
             url: url, 
@@ -93,6 +96,9 @@
                 return;
               }
               if(data == 'game_not_started') { return false;}
+
+              if(data.turn == current_turn) { return false;}
+              current_turn = data.turn;
 
               if(!data.board){return false;}
 
@@ -167,54 +173,6 @@
             }
           });
         })();
-
-/*
-        //Poll server for new game
-        function request_game() {
-
-          url = 'https://swe681project.com/game/findgame'
-          $.ajax({
-            url: url, 
-            success: function(data) {
-              if(!data.length) { 
-                return;
-              }
-
-              if(data == 'waiting_for_game') { return false;}
-
-              if(data == 'you gotta authenticate') { return false;}
-
-              alert('starting game');
-
-              game_started = true;
-
-              //assign enemy username
-              if(username == data.username1) { 
-                  enemy_username = data.username2;
-              }
-              else { 
-                  enemy_username = data.username1;
-              }
-
-              //set game id
-              game_id = data.game_id;
-
-              //set whose turn it is
-              if(username == data.turn) {
-                  is_user_turn = true;
-              }
-
-            },
-            complete: function() {
-              // Schedule the next request when the current one is complete
-              if(!game_started) {
-                  setTimeout(request_game, 5000);
-              }
-              else { $("#findGameBtn").remove();}
-            }
-          });
-        }; 
-*/
 
         //calculate score function
         function calculate(){
@@ -423,14 +381,6 @@
           return word_points;
         } //end function calculate_points(word, word_orientation)
 
-
-        // Get value from button click
-        $("#findGameBtn").click(function(){
-            alert('searching for game');
-            request_game();
-        })
-            
-
         //validate input position function
           //inputs: row/col of all input letters
           //check: 4 surrounding points of any input letter need to have a valid pre-placed letter
@@ -445,7 +395,8 @@
              //updates local score display with server response
            //else: restart turn
 
-        $("#SubmitBtn").click(function(){
+        $("#WordForm").submit(function(){
+          event.preventDefault();
 
           if(!is_user_turn){ 
             alert('You cannot do things when its not your turn');
@@ -459,26 +410,34 @@
             triple_words = [];
 
             document.getElementById("move_points").innerHTML = 0;
-            document.getElementById("user_score").innerHTML = move_points + user_score;
 
             record_board_state();
-            return;
 
-            $.post('http://127.0.0.1:8000/dummytest/',
-                { value: scrabble_word.join(",")},
-                function(data, status, jqXHR) {
-                    $('p').append('status: ' + status + ', data: ' + data);
-            }).done(function() { alert('data sent!'); }) //remove data sent once done testing !!
+            url = 'https://swe681project.com/game/' + game_id + '/input/'
 
-            $.get('http://127.0.0.1:8000/dummytest/',
-                function (data) {
-                    alert('data:' + JSON.stringify(data));
-                }
-            )
+            $.ajax({
+              url: url,
+              type: $(this).attr('method'),
+              data: { id:game_id, word: scrabble_word.join(","), csrfmiddlewaretoken: '{{ csrf_token }}'},
+//              data: $(this).serialize(),
+              success: function(data) {
+
+
+              },
+              complete: function(data) {
+                  return;
+              },
+              error: function (err){
+                alert(err);
+              }
+            });
+
         });
 
         $("#ResetBtn").click(function(){
           set_board(previous_board_state);
+          scrabble_word = [];
+
         })
         
 
@@ -1060,11 +1019,19 @@
 
 
     <input type="text" id="myInput">
+
     <button type="button" id="myBtn">Show Value</button>
-    <button type="button" id="SubmitBtn">Submit Word</button>
+    <form method="post" id="WordForm" action="temp">
+        {% csrf_token %}
+    <!--    {{ form.as_p }} -->
+        <input type="submit" id="SubmitBtn" value="Submit Word">
+    </form>
+    <button type="button" id="SubmitBtn2">Submit Word</button>
     <button type="button" id="ResetBtn">Reset Move</button>
     <label>Points: </label>
     <label id="move_points">0</label>
   </body>
 </html>
+
+{% endblock %}
 
