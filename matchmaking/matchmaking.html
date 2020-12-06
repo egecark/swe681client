@@ -53,6 +53,11 @@
                   $("#match_tables").dialog({
                       height: 140,
                       modal: true,
+                      close: function(event,ui){
+                          $("#user_game_tables").show();
+                          $("#user_match_tables").show();
+                      },
+                        
                       
                   });
 
@@ -62,13 +67,108 @@
 
 
               },
+
+              error: function (err){
+                alert(err);
+              }
+            });
+       
+            $("#user_game_tables").hide();
+            $("#user_match_tables").hide();
+
+
+        });
+
+
+        (function updateUserMatches(){
+            url = 'https://swe681project.com/user/matches/'
+            $.ajax({
+              url: url,
+              type: "GET",
+              success: function(data) {
+
+                  if(!data) {
+                      alert('No available matches');
+                      return;
+                  }
+                  
+
+                  var html = '<tr><th>game id</th><th>user 1</th><th>user 2</th><th>user 3</th><th>user 4</th><th>number of players</th>';
+                  
+                  $.each(data,function(key,value){
+                      html +='<tr>';
+                      html +='<td>'+ value.id + '</td>';
+                      html +='<td>'+ value.client1 + '</td>';
+                      html +='<td>'+ value.client2 + '</td>';
+                      html +='<td>'+ value.client3 + '</td>';
+                      html +='<td>'+ value.client4 + '</td>';
+                      html +='<td>'+ value.num_players + '</td>';
+                      html +='</tr>';
+                  });
+
+                  $("#user_match_tables").html(html);
+
+
+              },
+            complete: function() {
+              // Schedule the next request when the current one is complete
+              setTimeout(updateUserMatches, 5000);
+            },
+
+
               error: function (err){
                 alert(err);
               }
           });
        
 
-        });
+        })();
+
+        (function updateUserGames(){
+            url = 'https://swe681project.com/user/games/'
+            $.ajax({
+              url: url,
+              type: "GET",
+              success: function(data) {
+
+                  if(!data) {
+                      alert('No available matches');
+                      return;
+                  }
+                  
+
+                  var html = '<tr><th>game link</th><th>user 1</th><th>user 2</th><th>user 3</th><th>user 4</th><th>number of players</th>';
+
+                  $.each(data,function(key,value){
+                      id = value.id;
+                      game_href = '<a href=' + "{% url 'testing:game'  %}" + id + '/>Link</a>';
+                      html +='<tr>';
+                      html +='<td>'+ game_href + '</td>';
+                      html +='<td>'+ value.client1 + '</td>';
+                      html +='<td>'+ value.client2 + '</td>';
+                      html +='<td>'+ value.client3 + '</td>';
+                      html +='<td>'+ value.client4 + '</td>';
+                      html +='<td>'+ value.num_players + '</td>';
+                      html +='</tr>';
+                  });
+
+                  $("#user_game_tables").html(html);
+
+
+              },
+            complete: function() {
+              // Schedule the next request when the current one is complete
+              setTimeout(updateUserGames, 5000);
+            },
+
+
+              error: function (err){
+                alert(err);
+              }
+          });
+       
+
+        })();
 
         $("#JoinSubmitBtn").click(function()  {
             id = $("#id_id").val();
@@ -137,9 +237,6 @@
                       return;
                   }
 
-                  //Note: does not seem to return any error with invalid number of users
-                  //go to game if host successful
-                  window.location.href = 'https://swe681project.com/game/';
 
               },
               complete: function(data) {
@@ -154,13 +251,13 @@
         })
 
 
-    $(joinform).on('frmFormComplete', function(event, form, response) {
-        alert(response);
-    })
+//    $(joinform).on('frmFormComplete', function(event, form, response) {
+//        alert(response);
+//    })
 
-    $(hostform).on('frmFormComplete', function(event, form, response) {
-        alert(response);
-    })
+//    $(hostform).on('frmFormComplete', function(event, form, response) {
+//        alert(response);
+//    })
 
     $("#MakeMatchBtn").on('click', function () {
 
@@ -217,6 +314,26 @@
                </tbody>
           </table>
       </div>
+
+    <h1>Matches you are waiting on</h1>
+    <br>
+      <div id="user_match_tables">
+          <table class="innerTable">
+               <tbody>
+               </tbody>
+          </table>
+      </div>
+    <br>
+
+    <h1>Your games</h1>
+    <br>
+      <div id="user_game_tables">
+          <table class="innerTable">
+               <tbody>
+               </tbody>
+          </table>
+      </div>
+    <br>
 
 
   </body>
