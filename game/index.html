@@ -27,8 +27,11 @@
     var user3 = '';
     var user4 = '';
 
+    var user_num = false;
+
     {% block content %}
     var username = '{{ user.username}}'
+    var id = '{{ user.id }}'
     {% endblock %}
 
 
@@ -77,7 +80,12 @@
         //Poll server for which user's turn it is with timeout. If server says current turn belongs to the client's username, set is_user_turn to true, otherwise set to false
         (function check_for_turn_change() {
 
-          url = 'https://swe681project.com/game/turn/'
+          let game_url = window.location.href;
+          let game_url_split = game_url.split('/');
+          let game_id = game_url_split.pop();
+          if(!game_id) { game_id = game_url_split.pop();}
+
+          url = 'https://swe681project.com/game/turn/' + game_id;
           $.ajax({
             url: url, 
             success: function(data) {
@@ -86,35 +94,66 @@
               }
               if(data == 'game_not_started') { return false;}
 
+              if(!data.board){return false;}
 
               if(!game_started) {
                   game_started = true;
                   if(data.client1) {
                       user1 = data.client1;
-                      $("user1").innerhtml = data.client1;
+                      $("#user1").text(data.client1);
+                      $("#score1").text(data.score_1);
                   }
                   if(data.client2) {
                       user2 = data.client2;
-                      $("user2").text(user2);
+                      $("#user2").text(user2);
+                      $("#score2").text(data.score_2);
                   }
                   if(data.client3) {
                       user3 = data.client3;
-                      $("user3").html(user3);
+                      $("#user3").text(user3);
+                      $("#score3").text(data.score_3);
                   }
                   if(data.client4) {
                       user4 = data.client4;
-                      $("user4").html(user4);
+                      $("#user4").text(user4);
+                      $("#score4").text(data.score_4);
                   }
 
               }
 
+              if(id == data.client1){
+                  user_num = 1;
+                  $("#user1").css("font-weight", "bold");
+              }
+              else if(id == data.client2){
+                  user_num = 2;
+                  $("#user2").css("font-weight", "bold");
+              }
+              else if(id == data.client3){
+                  user_num = 3;
+                  $("#user3").css("font-weight", "bold");
+              }
+              else if(id == data.client4){
+                  user_num = 4;
+                  $("#user4").css("font-weight", "bold");
+              }
 
-              if(data.turn == username) {
+
+              if(data.turn == user_num) {
                 is_user_turn = true;
               }
               else {
                 is_user_turn = false;
               }
+
+              if(data.turn == 1) { $("#user1").css("font-size", 25);}
+              else { $("#user1").css("font-size", '');}
+              if(data.turn == 2) { $("#user2").css("font-size", 25);}
+              else { $("#user2").css("font-size", '');}
+              if(data.turn == 3) { $("#user3").css("font-size", 25);}
+              else { $("#user3").css("font-size", '');}
+              if(data.turn == 4) { $("#user4").css("font-size", 25);}
+              else { $("#user4").css("font-size", '');}
 
               input_board = get_board(data.board);
 
@@ -730,20 +769,18 @@
   </head>
   <body>
     <h1>Scrabble</h1>
-      {% block content2 %}
-      Hello, {{ user.username|default:'Guest' }}!
-      {% endblock %}
-      <label id="user1"></label>
-      <label id="user1_score"></label>
       <br>
-      <label id="user2"> </label>
-      <label id="user2_score"></label>
+      <label id="user1"></label>
+      <label id="score1"></label>
+      <br>
+      <label id="user2"></label>
+      <label id="score2"></label>
       <br>
       <label id="user3"></label>
-      <label id="user3_score"></label>
+      <label id="score3"></label>
       <br>
       <label id="user4"></label>
-      <label id="user4_score"></label>
+      <label id="score4"></label>
       <br>
       <br>
 
