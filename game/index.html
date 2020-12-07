@@ -24,7 +24,6 @@
 
     var game_started = false;
     var is_user_turn = false;
-    var current_turn = 0;
     var user1 = '';
     var user2 = '';
     var user3 = '';
@@ -97,8 +96,19 @@
               }
               if(data == 'game_not_started') { return false;}
 
-              if(data.turn == current_turn) { return false;}
-              current_turn = data.turn;
+              if(is_user_turn & game_started) { return false;}
+              else {
+                  input_board = get_board(data.board);
+
+                  previous_board_state = input_board;
+
+                  set_board(input_board);              
+
+                  $("#score1").text(data.score_1);
+                  $("#score2").text(data.score_2);
+                  $("#score3").text(data.score_3);
+                  $("#score4").text(data.score_4);
+              }
 
               if(!data.board){return false;}
 
@@ -160,11 +170,6 @@
               else { $("#user3").css("font-size", '');}
               if(data.turn == 4) { $("#user4").css("font-size", 25);}
               else { $("#user4").css("font-size", '');}
-
-              input_board = get_board(data.board);
-
-              //check if board needs to be read into an array
-              set_board(input_board);              
 
             },
             complete: function() {
@@ -265,19 +270,6 @@
             else { //if(word_orientation == 'vertical') {
               connected_word = find_word_in_row(row,col);
             }
-/*            else {
-
-              connected_word1 = find_word_in_col(row,col);
-              connected_word2 = find_word_in_row(row,col);
-              if(connected_word1.length > 1) {
-                connected_words.push(connected_word1);
-              }
-              if(connected_word2.length > 1) {
-                connected_words.push(connected_word2);
-              }
-              return false; //break out of each statement
-            }
-*/              
 
             if(connected_word.length > 1) {
             
@@ -322,14 +314,6 @@
 
             word_points += letter_score;
           })
-/*
-          alert('double mod');
-          alert(double_words.length);
-          alert(2**double_words.length);
-          alert('triple mod');
-          alert(triple_words.length);
-          alert(3**triple_words.length);
-*/
 
           //Multiply word modifiers to main word score
           word_points *= 2**double_words.length * 3**triple_words.length;
@@ -372,12 +356,6 @@
 
           }) //end $.each(connected_words, function(index, single_word)
         
-          /*           
-          alert('list of connected words');
-          alert(connected_words);
-          alert('total points');
-          alert(word_points);
-          */
           return word_points;
         } //end function calculate_points(word, word_orientation)
 
@@ -419,7 +397,6 @@
               url: url,
               type: $(this).attr('method'),
               data: { id:game_id, word: scrabble_word.join(","), csrfmiddlewaretoken: '{{ csrf_token }}'},
-//              data: $(this).serialize(),
               success: function(data) {
 
 
@@ -568,8 +545,7 @@
             while(i < board.length - 1) {
                 i++;
 
-                let char = board.charAt(i);
-
+                let char = board.charAt(i).toUpperCase();
                 if(char == ',') {
                     continue;
                 }
@@ -582,7 +558,7 @@
                     continue;
                 }
                 if(char == '\'') {
-                    if(board.charAt(i+1) == '\'') {
+                    if(board.charAt(i+1) == '\'' || board.charAt(i+1) == ' ') {
                         col += 1;
                         i++;
                      }
@@ -627,6 +603,7 @@
               board_value = board_state[row][col];
               if(!scrabble_values.includes(board_value)) { 
                 alert('invalid board value');
+                alert(board_value)
                 return false;
               }
               set_table_value(board_value,row,col);
@@ -670,11 +647,14 @@
             var user_input = $("#myInput").val();
             if(scrabble_input_test.test(user_input)){
                 scrabble_input = user_input.split('-'); //Get individual components of scrabble move (<letter>-<row>-<col>)
+                scrabble_input[0] = scrabble_input[0].toUpperCase();
+                scrabble_input[1] = scrabble_input[1]-1; //subtract one bc zero indexed
+                scrabble_input[2] = scrabble_input[2]-1;
                 scrabble_word.push(scrabble_input);
                 //alert(scrabble_input);
                 new_letter = scrabble_input[0].toUpperCase();
-                new_row = scrabble_input[1]-1; //subtract one bc zero indexed
-                new_col = scrabble_input[2]-1;
+                new_row = scrabble_input[1]; //subtract one bc zero indexed
+                new_col = scrabble_input[2];
 
                //get elements of board
 //                var board = document.getElementById("Board"), 
