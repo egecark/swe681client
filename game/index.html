@@ -22,6 +22,7 @@
     var previous_board_state = [['3W','','','2L','','','','3W','','','','2L','','','3W'],['','2W','','','','3L','','','','3L','','','','2W',''],['','','2W','','','','2L','','2L','','','','2W','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','','','2W','','','','','','2W','','','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','2L','','','','2L','','2L','','','','2L','',''],['3W','','','2L','','','','','','','','2L','','','3W'],['','','2L','','','','2L','','2L','','','','2L','',''],['','3L','','','','3L','','','','3L','','','','3L',''],['','','','','2W','','','','','','2W','','','',''],['2L','','','2W','','','','2L','','','','2W','','','2L'],['','','2W','','','','2L','','2L','','','','2W','',''],['','2W','','','','3L','','','','3L','','','','2W',''],['3W','','','2L','','','','3W','','','','2L','','','3W']];
     var input_points = []
 
+    var need_reset_board = false;
     var game_started = false;
     var is_user_turn = false;
     var user1 = '';
@@ -96,7 +97,7 @@
               }
               if(data == 'game_not_started') { return false;}
 
-              if(is_user_turn & game_started) { return false;}
+              if(is_user_turn & game_started & !need_reset_board) { return false;}
               else {
                   input_board = get_board(data.board);
 
@@ -408,6 +409,8 @@
 
         $("#WordForm").submit(function(){
           event.preventDefault();
+
+          need_reset_board = true;
 
           if(!is_user_turn){ 
             alert('You cannot do things when its not your turn');
@@ -1043,7 +1046,6 @@
     <!--    {{ form.as_p }} -->
         <input type="submit" id="SubmitBtn" value="Submit Word">
     </form>
-    <button type="button" id="SubmitBtn2">Submit Word</button>
     <button type="button" id="ResetBtn">Reset Move</button>
     <label>Points: </label>
     <label id="move_points">0</label>
