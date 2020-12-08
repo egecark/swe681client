@@ -170,6 +170,48 @@
 
         })();
 
+        (function updateUserStats(){
+            url = 'https://swe681project.com/statistics/'
+            $.ajax({
+              url: url,
+              type: "GET",
+              success: function(data) {
+
+                  if(!data) {
+                      alert('No users found');
+                      return;
+                  }
+                  
+
+                  var html = '<tr><th>username</th><th>win</th><th>loss</th>';
+
+                  $.each(data,function(key,value){
+                      html +='<tr>';
+                      html +='<td>'+ value.username + '</td>';
+                      html +='<td>'+ value.win + '</td>';
+                      html +='<td>'+ value.lose + '</td>';
+                      html +='</tr>';
+                  });
+
+                  $("#user_stats").html(html);
+
+
+              },
+            complete: function() {
+              // Schedule the next request when the current one is complete
+              setTimeout(updateUserStats, 5000);
+            },
+
+
+              error: function (err){
+                alert(err);
+              }
+          });
+       
+
+        })();
+
+
         $("#JoinSubmitBtn").click(function()  {
             id = $("#id_id").val();
             $("#joinform").attr('action', 'https://swe681project.com/join/' + id + '/');	
@@ -250,14 +292,6 @@
         })
 
 
-//    $(joinform).on('frmFormComplete', function(event, form, response) {
-//        alert(response);
-//    })
-
-//    $(hostform).on('frmFormComplete', function(event, form, response) {
-//        alert(response);
-//    })
-
     $("#MakeMatchBtn").on('click', function () {
 
         $("#match_form").dialog({
@@ -327,6 +361,16 @@
     <h1>Your games</h1>
     <br>
       <div id="user_game_tables">
+          <table class="innerTable">
+               <tbody>
+               </tbody>
+          </table>
+      </div>
+    <br>
+
+    <h1>User stats</h1>
+    <br>
+      <div id="user_stats">
           <table class="innerTable">
                <tbody>
                </tbody>
