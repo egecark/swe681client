@@ -111,13 +111,36 @@
 
                   player_letters = data.player_letters;
 
-                  $("#letter1").text(player_letters[2]);
-                  $("#letter2").text(player_letters[7]);
-                  $("#letter3").text(player_letters[12]);
-                  $("#letter4").text(player_letters[17]);
-                  $("#letter5").text(player_letters[22]);
-                  $("#letter6").text(player_letters[27]);
-                  $("#letter7").text(player_letters[32]);
+                  let l1 = player_letters[2];
+                  let l2 = player_letters[7];
+                  let l3 = player_letters[12];
+                  let l4 = player_letters[17];
+                  let l5 = player_letters[22];
+                  let l6 = player_letters[27];
+                  let l7 = player_letters[32];
+
+ 
+                  if(scrabble_values.includes(l1)){
+                      $("#letter1").text(player_letters[2]);
+                  }
+                  if(scrabble_values.includes(l2)){
+                      $("#letter2").text(player_letters[7]);
+                  }
+                  if(scrabble_values.includes(l3)){
+                      $("#letter3").text(player_letters[12]);
+                  }
+                  if(scrabble_values.includes(l4)){
+                      $("#letter4").text(player_letters[17]);
+                  }
+                  if(scrabble_values.includes(l5)){
+                      $("#letter5").text(player_letters[22]);
+                  }
+                  if(scrabble_values.includes(l6)){
+                      $("#letter6").text(player_letters[27]);
+                  }
+                  if(scrabble_values.includes(l7)){
+                      $("#letter7").text(player_letters[32]);
+                  }
               }
 
               if(!data.board){return false;}
@@ -713,6 +736,10 @@
   text-align: center;
   vertical-align: middle;
   contenteditable: true;
+  }
+  td {
+  height: 30px;
+  width: 30px;
   }
   </style>
   </head>
