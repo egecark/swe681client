@@ -81,6 +81,47 @@
 
         });
 
+        (function updateGameRecaps(){
+            url = 'https://swe681project.com/moves/'
+            $.ajax({
+              url: url,
+              type: "GET",
+              success: function(data) {
+
+                  if(!data) {
+                      alert('No game with that id');
+                      return;
+                  }
+                  
+
+                  var html = '<tr><th>Game ID</th><th>Username</th><th>Move</th>';
+                  
+                  $.each(data,function(key,value){
+                      html +='<tr>';
+                      html +='<td>'+ value.game_id + '</td>';
+                      html +='<td>'+ value.username + '</td>';
+                      html +='<td>'+ value.move + '</td>';
+                      html +='</tr>';
+                  });
+
+                  $("#game_recap").html(html);
+
+
+              },
+
+            complete: function() {
+              // Schedule the next request when the current one is complete
+              setTimeout(updateGameRecaps, 5000);
+            },
+
+              error: function (err){
+                alert(err);
+              }
+            });
+       
+
+        })();
+
 
         (function updateUserMatches(){
             url = 'https://swe681project.com/user/matches/'
@@ -342,6 +383,14 @@
           </form>
       </div>
 
+    <h1>Select a game to view its match log</h1>
+      <form method="post" id="joinform" action="temp">
+          {% csrf_token %}
+          {{ joinform.as_p }}
+          <input type="submit" id="JoinSubmitBtn" value="Join">
+
+      </form>
+      <button type="button" id="GetMatchesBtn">Get list of matches</button>
 
       <div id="match_tables" style="display:none">
           <table class="innerTable">
@@ -379,6 +428,14 @@
           </table>
       </div>
     <br>
+
+      <div id="game_recap"">
+          <table class="innerTable">
+               <tbody>
+               </tbody>
+          </table>
+      </div>
+
 
 
   </body>
