@@ -65,8 +65,6 @@
         if(!game_id) { game_id = game_url_split.pop();}
 
 
-
-
         //Check if row/col pair is in list of value spaces
         function array_IndexOf_2D(arr, pair){
           for(var r = 0; r<arr.length; r++){
@@ -126,24 +124,46 @@
                   if(scrabble_values.includes(l1)){
                       $("#letter1").text(player_letters[2]);
                   }
+                  else {
+                      $("#letter1").text(' ');
+                  }
                   if(scrabble_values.includes(l2)){
                       $("#letter2").text(player_letters[7]);
+                  }
+                  else {
+                      $("#letter2").text(' ');
                   }
                   if(scrabble_values.includes(l3)){
                       $("#letter3").text(player_letters[12]);
                   }
+                  else {
+                      $("#letter3").text(' ');
+                  }
                   if(scrabble_values.includes(l4)){
                       $("#letter4").text(player_letters[17]);
+                  }
+                  else {
+                      $("#letter4").text(' ');
                   }
                   if(scrabble_values.includes(l5)){
                       $("#letter5").text(player_letters[22]);
                   }
+                  else {
+                      $("#letter5").text(' ');
+                  }
                   if(scrabble_values.includes(l6)){
                       $("#letter6").text(player_letters[27]);
+                  }
+                  else {
+                      $("#letter6").text(' ');
                   }
                   if(scrabble_values.includes(l7)){
                       $("#letter7").text(player_letters[32]);
                   }
+                  else {
+                      $("#letter7").text(' ');
+                  }
+
               }
 
               if(!data.board){return false;}
@@ -1058,13 +1078,13 @@
 
     <table id="Board">
         <tr>
-            <td id="letter1"></td>
-            <td id="letter2"></td>
-            <td id="letter3"></td>
-            <td id="letter4"></td>
-            <td id="letter5"></td>
-            <td id="letter6"></td>
-            <td id="letter7"></td>
+            <td id="letter1"> </td>
+            <td id="letter2"> </td>
+            <td id="letter3"> </td>
+            <td id="letter4"> </td>
+            <td id="letter5"> </td>
+            <td id="letter6"> </td>
+            <td id="letter7"> </td>
         </tr>
     </table>
 
